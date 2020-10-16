@@ -11,9 +11,13 @@ The script will facilitate single Parent/Child links, and single Peer to Peer li
 There are five variables needed to use the script:
 
 **BASEURL** sets the location of your Helix ALM REST API
+
 **APIKEY** sets the value of your Helix ALM API Key and Key Secret
+
 **PROJECTID** sets the value of your Helix ALM project id
+
 **WORKBOOK** sets the value of the Excel workbook to use as a source for linking information
+
 **HELIXFIELD** sets the value for the Helix ALM custom field used to determine which records should be linked
 
 Within your Excel file, your data should be in the following format:
