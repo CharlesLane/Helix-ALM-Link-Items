@@ -38,10 +38,10 @@ This column contains the unique identifier used to identify the first linked ite
 
 The unique identifier field used by the script is configurable. The field name you create in Helix ALM to hold this identifier should be set in the "HELIXFIELD" variable in the LinkItems.py script.
 
-## Column E: Child/Peer Item Type
+### Column E: Child/Peer Item Type
 This column determines the type of the second linked item. If it is for a parent/child relationship, this should be the child's item type. If it is for a peer relationship, this should be the item type for the item identified in column F.
 
-## Column F: Child/Peer Identifier
+### Column F: Child/Peer Identifier
 This column contains the unique identifier used to identify the second linked item. If it is for a parent/child relationship, this is the child's ID. If it is for a peer relationship, this is for the item type defined in column E.
 
 The child unique identifier uses the same field as defined in column D.
