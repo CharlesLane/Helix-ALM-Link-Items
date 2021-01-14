@@ -6,7 +6,7 @@ import json
 import time
 
 # Variables
-BASEURL = 'https://ttotenberg.das.perforce.com:8443/helix-alm/api/v0/'
+BASEURL = 'localhost:8443/helix-alm/api/v0/'
 APIKEY = 'df4b2b246a00d5e6459620d99dd970a4aa38f4a46542c3c5c5148185e0b4dd5d:e7758a2065a0ee841da370221be9b9eb26c9a8afb2d74e78d45d8be6cc42a6ea'
 PROJECTID = 28
 WORKBOOK = 'Sample Data.xlsx'
