@@ -3,9 +3,10 @@ import os
 import requests
 from urllib.error import HTTPError
 import json
+import time
 
 # Variables
-BASEURL = 'https://localhost:8443/helix-alm/api/v0/'
+BASEURL = 'https://ttotenberg.das.perforce.com:8443/helix-alm/api/v0/'
 APIKEY = 'df4b2b246a00d5e6459620d99dd970a4aa38f4a46542c3c5c5148185e0b4dd5d:e7758a2065a0ee841da370221be9b9eb26c9a8afb2d74e78d45d8be6cc42a6ea'
 PROJECTID = 28
 WORKBOOK = 'Sample Data.xlsx'
@@ -27,18 +28,22 @@ wb.save(WORKBOOK)
 # Get your Helix ALM API Bearer token, and set values for authentication used later
 blankPayload  = {}
 headers = {'Authorization': 'APIKey ' + APIKEY}
+token = ''
 
-try:
-  response = requests.request("GET", url + 'token', headers=headers, data = blankPayload, verify=False)
-  response.raise_for_status()
-  jsonResponse = response.json()
-  token = jsonResponse["accessToken"]
+def getToken():
+  try:
+    response = requests.request("GET", url + 'token', headers=headers, data = blankPayload, verify=False)
+    response.raise_for_status()
+    jsonResponse = response.json()
+    global token
+    token = jsonResponse["accessToken"]
 
-except HTTPError as http_err:
-  print(f'HTTP error occurred: {http_err}')
-except Exception as err:
-  print(f'Other error occurred: {err}')
+  except HTTPError as http_err:
+    print(f'HTTP error occurred: {http_err}')
+  except Exception as err:
+    print(f'Other error occurred: {err}')
 
+getToken()
 headers = {'Authorization': 'Bearer ' + token}
 
 # Define your Excel columns
@@ -50,7 +55,7 @@ cpitc = 5 # cpitc = child or peer item type column
 cpidc = 6 # cpidc = child or peer identifier column
 
 # Define your starting Excel row
-cr = 2 # cr = current row
+cr = 2 # cr = current row  
 
 while ws.cell(row=cr, column=ltc).value != None:
   if ws.cell(row=cr, column=ltc).value != None:
@@ -68,19 +73,28 @@ while ws.cell(row=cr, column=ltc).value != None:
     # Child/Peer Identifier
     childPeerId = ppit = ws.cell(row=cr, column=cpidc).value
 
-
-
   # Create a Parent/Child Link
   while ws.cell(row=cr, column=ltc).value != None:
+
+    # Check rate limits, and sleep if the rate is below 10
+    response = requests.request("GET", url + 'ratelimits', headers=headers, data = blankPayload, verify=False)
+    responseRateLimitRemaining = response.headers['X-RateLimit-Remaining']
+    print('The remaining rate limit is: ' + str(responseRateLimitRemaining))
+
+    if int(responseRateLimitRemaining) <= 5:
+      time.sleep(60) 
+    else:
+      pass
+
     if linkType == 'ParentChild':
       
       # Get the Parent/Peer ID based on the 'HELIXFIELD' identifier
       if parentPeerType == 'testRun':
-        response = requests.request("GET", url + parentPeerType +'s' + '?search=' + HELIXFIELD + '=' + str(parentPeerId) + '&fields=Test Run Number', headers=headers, data = blankPayload, verify=False)
+        response = requests.request("GET", url + parentPeerType +'s' + '?search=' + HELIXFIELD + '="' + str(parentPeerId) + '"' + '&fields=Test Run Number', headers=headers, data = blankPayload, verify=False)
         jsonResponse = response.json()
         parentPeerNumber = jsonResponse[parentPeerType + 's'][0]["fields"][0]["integer"]
       elif parentPeerType != 'testRun':
-        response = requests.request("GET", url + parentPeerType +'s' + '?search=' + HELIXFIELD + '=' + str(parentPeerId) + '&fields=Number', headers=headers, data = blankPayload, verify=False)
+        response = requests.request("GET", url + parentPeerType +'s' + '?search=' + HELIXFIELD + '="' + str(parentPeerId) + '"' + '&fields=Number', headers=headers, data = blankPayload, verify=False)
         jsonResponse = response.json()
         parentPeerNumber = jsonResponse[parentPeerType + 's'][0]["fields"][0]["integer"]
       else:
@@ -88,11 +102,11 @@ while ws.cell(row=cr, column=ltc).value != None:
       
       # Get the Child/Peer ID based on the 'HELIXFIELD' identifier
       if childPeerType == 'testRun':
-        response = requests.request("GET", url + childPeerType +'s' + '?search=' + HELIXFIELD + '=' + str(childPeerId) + '&fields=Test Run Number', headers=headers, data = blankPayload, verify=False)
+        response = requests.request("GET", url + childPeerType +'s' + '?search=' + HELIXFIELD + '="' + str(childPeerId) + '"' '&fields=Test Run Number', headers=headers, data = blankPayload, verify=False)
         jsonResponse = response.json()
         childPeerNumber = jsonResponse[childPeerType + 's'][0]["fields"][0]["integer"]
       elif childPeerType != 'testRun':
-        response = requests.request("GET", url + childPeerType +'s' + '?search=' + HELIXFIELD + '=' + str(childPeerId) + '&fields=Number', headers=headers, data = blankPayload, verify=False)
+        response = requests.request("GET", url + childPeerType +'s' + '?search=' + HELIXFIELD + '="' + str(childPeerId) + '"' '&fields=Number', headers=headers, data = blankPayload, verify=False)
         jsonResponse = response.json()
         childPeerNumber = jsonResponse[childPeerType + 's'][0]["fields"][0]["integer"]
       else:
@@ -129,6 +143,7 @@ while ws.cell(row=cr, column=ltc).value != None:
       elif parentPeerType != 'testRun':
         response = requests.request("GET", url + parentPeerType +'s' + '?search=' + HELIXFIELD + '=' + str(parentPeerId) + '&fields=Number', headers=headers, data = blankPayload, verify=False)
         jsonResponse = response.json()
+        #print('The ParentPeerNumber response is: ' + str(jsonResponse))
         parentPeerNumber = jsonResponse[parentPeerType + 's'][0]["fields"][0]["integer"]
       else:
         pass
